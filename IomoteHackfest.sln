@@ -1,20 +1,28 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceSimulator", "DeviceSimulator\DeviceSimulator.csproj", "{1F9A62CB-79D6-4D82-ABE0-D4840816E06D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeechApp", "SpeechApp\SpeechApp.csproj", "{E60520B2-1564-4F98-8B2D-B9F1B3534938}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1F9A62CB-79D6-4D82-ABE0-D4840816E06D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1F9A62CB-79D6-4D82-ABE0-D4840816E06D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1F9A62CB-79D6-4D82-ABE0-D4840816E06D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1F9A62CB-79D6-4D82-ABE0-D4840816E06D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DBB8255-4FCF-4702-AB6A-10A0D44E24A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DBB8255-4FCF-4702-AB6A-10A0D44E24A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DBB8255-4FCF-4702-AB6A-10A0D44E24A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DBB8255-4FCF-4702-AB6A-10A0D44E24A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
