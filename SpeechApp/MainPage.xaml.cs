@@ -49,6 +49,7 @@ namespace SpeechApp
 
         private void SpeechRecognizer_HypothesisGenerated(SpeechRecognizer sender, SpeechRecognitionHypothesisGeneratedEventArgs args)
         {
+
             
         }
 
