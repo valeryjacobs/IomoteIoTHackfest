@@ -41,7 +41,14 @@ namespace SpeechApp
             SpeechRecognitionCompilationResult result = await speechRecognizer.CompileConstraintsAsync();
             speechRecognizer.ContinuousRecognitionSession.ResultGenerated += ContinuousRecognitionSession_ResultGenerated;
             speechRecognizer.ContinuousRecognitionSession.Completed += ContinuousRecognitionSession_Completed;
+            speechRecognizer.HypothesisGenerated += SpeechRecognizer_HypothesisGenerated;
+           await  this.speechRecognizer.RecognizeAsync();
 
+        }
+
+        private void SpeechRecognizer_HypothesisGenerated(SpeechRecognizer sender, SpeechRecognitionHypothesisGeneratedEventArgs args)
+        {
+            
         }
 
         private void ContinuousRecognitionSession_ResultGenerated(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionResultGeneratedEventArgs args)
