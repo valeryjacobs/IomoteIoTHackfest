@@ -49,8 +49,8 @@ namespace SpeechApp
 
         private void SpeechRecognizer_HypothesisGenerated(SpeechRecognizer sender, SpeechRecognitionHypothesisGeneratedEventArgs args)
         {
-
-            
+            string hypothesis = args.Hypothesis.Text;
+            string textboxContent = dictatedTextBuilder.ToString() + " " + hypothesis + " ...";
         }
 
         private void ContinuousRecognitionSession_ResultGenerated(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionResultGeneratedEventArgs args)
