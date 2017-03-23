@@ -32,6 +32,7 @@ namespace SpeechApp
         public MainPage()
         {
             this.InitializeComponent();
+            dictatedTextBuilder = new StringBuilder();
         }
 
 

@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script type='text/javascript' src='/Scripts/knockout.js'></script>
+    <script type='text/javascript' src='/Scripts/jquery-1.10.2.min.js'></script>
+    <script type='text/javascript' src='/Scripts/jsoneditor.min.js'></script>
+    <link rel="stylesheet" type="text/css" href="/Content/Site.css">
+</head>
+<body>
+    <p>View: <input data-bind="value: view" /></p>
+    <div class="datagrid">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Device ID</th>
+                    <th>Connection State</th>
+                    <th>Connection State Update</th>
+                    <th>Last Activity</th>
+                    <th>Status Updates</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: devices">
+                <tr>
+                    <td>
+                        <button class="btn" data-bind="click: $parent.selectDevice,text: deviceId">Remove</button>
+                    </td>
+                    <td data-bind="text: connectionState"></td>
+                    <td data-bind="text: connectionStateUpdatedTime"></td>
+                    <td data-bind="text: lastActivityTime"></td>
+                    <td data-bind="text: status"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr />
+
+    <h1 data-bind="with: selectedDevice">Selected device:&nbsp;<span data-bind="text:deviceId"></span></h1>
+
+    <div class="datagrid">
+        <table>
+            <thead>
+                <tr>
+                    <th>eTag</th>
+                    <th>Desired Properties</th>
+                    <th>Reported Properties</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-bind="with:selectedDeviceTwin">
+                    <td data-bind="text: etag"></td>
+                    <td><textarea cols="200" rows="20" data-bind="textInput: $parent.twinDesired"></textarea></td>
+                    <td><textarea cols="200" rows="20" data-bind="textInput: $parent.twinReported"></textarea></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="datagrid">
+        <table>
+            <tbody data-bind="foreach: desiredProperties">
+                <tr>
+                    <td data-bind="text: $data"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+
+        function DMViewModel() {
+            var self = this;
+            self.devices = ko.observableArray();
+            self.selectedDeviceTwin = ko.observable();
+            self.selectedDevice = ko.observable();
+            self.view = ko.observable("main");
+            self.selectedDeviceId = ko.observable("Device00000008");
+            self.twinDesired = ko.observable();
+            self.desiredProperties = ko.observable();
+            self.twinReported = ko.observable();
+            self.selectDevice = function (device) {
+                self.selectedDevice(device);
+
+                $.getJSON("/api/devices/" + self.selectedDevice().deviceId, function (data) {
+                    self.selectedDeviceTwin(data);
+                    self.twinDesired(ko.toJSON(data.properties.desired));
+                    self.twinReported(ko.toJSON(data.properties.reported));
+
+                    var reflector = new Reflector(data.properties.desired);
+                    self.desiredProperties(reflector.getProperties());
+                })
+
+
+
+
+
+            }
+
+            var Reflector = function (obj) {
+                this.getProperties = function () {
+                    var properties = [];
+                    for (var prop in obj) {
+                        if (typeof obj[prop] != 'function') {
+                            properties.push(prop);
+                        }
+                    }
+                    return properties;
+                };
+            }
+
+            function updateData() {
+                $.getJSON("/api/devices", function (data) {
+                    self.devices(data);
+                })
+            };
+
+            updateData();
+
+            var refreshId = setInterval(updateData, 5000);
+        }
+
+        $(document).ready(function () {
+            ko.applyBindings(new DMViewModel());
+        });
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+﻿{
+  "deviceId": "Device00000008",
+  "etag": "AAAAAAAAAAI=",
+  "properties": {
+    "desired": {
+      "freq": 10,
+      "$metadata": {
+        "$lastUpdated": "2017-03-22T13:27:56.0726691Z",
+        "$lastUpdatedVersion": 2,
+        "send_time": 5,
+        "log_time": 5,
+        "power_mode": 0,
+        "digital_in_mode": 0
+      },
+      "$version": 2
+    },
+    "reported": {
+      "$metadata": { "$lastUpdated": "2017-03-22T13:27:15.6661639Z" },
+      "$version": 1
+    }
+  }
+}
