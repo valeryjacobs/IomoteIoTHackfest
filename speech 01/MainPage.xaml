@@ -8,9 +8,21 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Button x:Name="btnStart" Content="Button" HorizontalAlignment="Left" Margin="247,54,0,0" VerticalAlignment="Top" Click="btnStart_Click"/>
-        <ComboBox x:Name="cbLanguage" HorizontalAlignment="Left" Margin="10,54,0,0" VerticalAlignment="Top" Width="206"/>
-        <TextBox x:Name="tbxScript" HorizontalAlignment="Left" Height="283" Margin="10,261,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="340"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"></RowDefinition>
+            <RowDefinition Height="60"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
 
+        <ComboBox Margin="5" Grid.Column="0" x:Name="cbLanguage" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="206"/>
+        <ComboBox Margin="5"  Grid.Column="1" x:Name="cbVoices" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="206"/>
+
+        <Button Margin="5" Grid.Row="1" x:Name="btnStart" Content="Button" HorizontalAlignment="Left" VerticalAlignment="Top" Click="btnStart_Click"/>
+
+        <TextBox Margin="5" Grid.Row="2" Grid.ColumnSpan="2" x:Name="tbxScript"   HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="TextBox"  />
     </Grid>
 </Page>

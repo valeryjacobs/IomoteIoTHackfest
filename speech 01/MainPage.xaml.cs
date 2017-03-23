@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources.Core;
 using System.Net.Http;
 using Newtonsoft.Json;
+using Windows.Media.SpeechSynthesis;
 
 // Il modello di elemento per la pagina vuota è documentato all'indirizzo http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x410
 
@@ -40,12 +41,38 @@ namespace speech_01
         private ResourceMap speechResourceMap;
         private byte reconState = 0;
         private bool started = false;
-        private MediaElement startSound;
+        private MediaElement startSound, voice;
+        private SpeechSynthesizer synthesizer;
 
         public MainPage()
         {
             this.InitializeComponent();
 
+        }
+
+        private void InitializeListboxVoiceChooser()
+        {
+            // Get all of the installed voices.
+            var voices = SpeechSynthesizer.AllVoices;
+
+            // Get the currently selected voice.
+            VoiceInformation currentVoice = synthesizer.Voice;
+
+            foreach (VoiceInformation voice in voices.OrderBy(p => p.Language))
+            {
+                ComboBoxItem item = new ComboBoxItem();
+                item.Name = voice.DisplayName;
+                item.Tag = voice;
+                item.Content = voice.DisplayName + " (Language: " + voice.Language + ")";
+                cbVoices.Items.Add(item);
+
+                // Check to see if we're looking at the current voice and set it as selected in the listbox.
+                if (currentVoice.Id == voice.Id)
+                {
+                    item.IsSelected = true;
+                    cbVoices.SelectedItem = item;
+                }
+            }
         }
 
 
@@ -58,7 +85,7 @@ namespace speech_01
             foreach (lIntent value in response.intents)
             {
                 Debug.WriteLine("[PARSE] - Intent: " + value.intent + " - Score: " + value.score.ToString());
-                if ((value.intent == "None") && (value.score > 0.09) )
+                if ((value.intent == "None") && (value.score > 0.09))
                     totScore--;
                 if ((value.intent == target) && (value.score > 0.95))
                     totScore++;
@@ -67,7 +94,7 @@ namespace speech_01
             if (mandEntTypes != null)
             {
                 int elemFound = 0, toFind = mandEntTypes.Length;
-                
+
                 foreach (lEntity value in response.entities)
                 {
                     var valFound = 0;
@@ -90,9 +117,9 @@ namespace speech_01
             return totScore;
         }
 
-        private async Task LUISParse(string queryString)
+        private async Task luisTask(string queryString)
         {
-            int evalScore = 0 ;
+            int evalScore = 0;
             await speechRecognizer.ContinuousRecognitionSession.StopAsync();
             Debug.WriteLine("[LUIS] - Stop recognition");
 
@@ -105,7 +132,7 @@ namespace speech_01
                 {
                     var jsonResponse = await msg.Content.ReadAsStringAsync();
                     var luisData = JsonConvert.DeserializeObject<LUISResponse>(jsonResponse);
-                    
+
 
                     string[] mTypes = { "Misura", "Ambiente" };
 
@@ -115,14 +142,17 @@ namespace speech_01
 
             }
 
-            //  TODO: implement azure iot hub commandds
+            //  TODO: implement azure iot hub commands
+
             if (evalScore > 1)
             {
                 Debug.WriteLine("[IOTHUB] - Executing command! :-)");
+                speakSafe("Ho eseguito il comando");
             }
             else
             {
                 Debug.WriteLine("[IOTHUB] - NOT Executing command, low score! :-(");
+                speakSafe("Mi spiace, non ho capito");
             }
         }
         #endregion
@@ -133,13 +163,19 @@ namespace speech_01
         {
             if (!started)
             {
+                synthesizer = new SpeechSynthesizer();
+                InitializeListboxVoiceChooser();
                 // Keep track of the UI thread dispatcher, as speech events will come in on a separate thread.
                 startSound = new MediaElement();
+                voice = new MediaElement();
                 dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
                 started = true;
                 speechContext = ResourceContext.GetForCurrentView();
                 speechResourceMap = ResourceManager.Current.MainResourceMap.GetSubtree("triggerStrings");
-
+                foreach (var languages in SpeechRecognizer.SupportedTopicLanguages)
+                {
+                    Debug.WriteLine($"DisplayName: {languages.DisplayName} LanguageTag: {languages.LanguageTag}");
+                }
                 // Prompt the user for permission to access the microphone. This request will only happen
                 // once, it will not re-prompt if the user rejects the permission.
                 bool permissionGained = await AudioCapturePermissions.RequestMicrophonePermission();
@@ -192,7 +228,7 @@ namespace speech_01
             }
         }
 
-        private async void btnStart_Click(object sender, RoutedEventArgs e)
+        private void btnStart_Click(object sender, RoutedEventArgs e)
         {
 
         }
@@ -210,6 +246,50 @@ namespace speech_01
                 var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => playSound());
             }
         }
+
+        public void AppendOutputSafe(string input)
+        {
+            // If called from the UI thread, then update immediately.
+            // Otherwise, schedule a task on the UI thread to perform the update.
+            if (Dispatcher.HasThreadAccess)
+            {
+                AppendOutput(input);
+            }
+            else
+            {
+                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => AppendOutput(input));
+            }
+        }
+
+        private async void AppendOutput(string input)
+        {
+            tbxScript.Text = input  + "\n" + tbxScript.Text;
+        }
+
+        public void speakSafe(string textToSay)
+        {
+            // If called from the UI thread, then update immediately.
+            // Otherwise, schedule a task on the UI thread to perform the update.
+            if (Dispatcher.HasThreadAccess)
+            {
+                speak(textToSay);
+            }
+            else
+            {
+                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => speak(textToSay));
+            }
+        }
+
+        public async void speak(string text)
+        {
+            SpeechSynthesisStream synthesisStream = await synthesizer.SynthesizeTextToStreamAsync(text);
+
+            // Set the source and start playing the synthesized audio stream.
+
+            voice.SetSource(synthesisStream, synthesisStream.ContentType);
+            voice.Play();
+        }
+
 
         public async void playSound()
         {
@@ -320,6 +400,7 @@ namespace speech_01
         private void SpeechRecognizer_StateChanged(SpeechRecognizer sender, SpeechRecognizerStateChangedEventArgs args)
         {
             Debug.WriteLine("[STATE CHG] - " + args.State.ToString());
+          
         }
 
         private void SpeechRecognizer_HypothesisGenerated(SpeechRecognizer sender, SpeechRecognitionHypothesisGeneratedEventArgs args)
@@ -327,13 +408,14 @@ namespace speech_01
             string hypothesis = args.Hypothesis.Text;
 
             Debug.WriteLine("[HYP] - " + hypothesis);
+            AppendOutputSafe(hypothesis);
 
         }
 
         private async void ContinuousRecognitionSession_Completed(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionCompletedEventArgs args)
         {
             Debug.WriteLine("[COMPLETED] - " + args.Status.ToString());
-            if(args.Status.ToString() == "TimeoutExceeded")
+            if (args.Status.ToString() == "TimeoutExceeded")
             {
                 reconState = 0;
                 await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
@@ -353,6 +435,7 @@ namespace speech_01
         private async void ContinuousRecognitionSession_ResultGenerated(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionResultGeneratedEventArgs args)
         {
             Debug.WriteLine("[RES] - \"" + args.Result.Text + "\" - Confidence:" + args.Result.Confidence.ToString());
+            AppendOutputSafe(args.Result.Text);
             if (args.Result.Confidence != SpeechRecognitionConfidence.Rejected)
             {
                 if (reconState == 0)
@@ -361,6 +444,7 @@ namespace speech_01
                     await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
 
                     playSoundSafe();
+                    
                     try
                     {
                         await speechRecognizer.ContinuousRecognitionSession.StartAsync();
@@ -375,12 +459,12 @@ namespace speech_01
                 }
                 else if (reconState == 1)
                 {
-                    await LUISParse(args.Result.Text);
+                    await luisTask(args.Result.Text);
                     //  Now all the required tasks have been accomplished, we must restart the speech
                     //  recognition engine waiting for a new command
                     reconState = 0;
                     await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
-                    
+
                     try
                     {
                         await speechRecognizer.ContinuousRecognitionSession.StartAsync();
@@ -396,5 +480,15 @@ namespace speech_01
 
 
         #endregion
+
+        private void cbVoices_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+            ComboBoxItem item = (ComboBoxItem)(cbVoices.SelectedItem);
+            VoiceInformation voice = (VoiceInformation)(item.Tag);
+            synthesizer.Voice = voice;
+
+
+        }
     }
 }
