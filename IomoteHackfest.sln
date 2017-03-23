@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceSimulator", "DeviceSimulator\DeviceSimulator.csproj", "{5DBB8255-4FCF-4702-AB6A-10A0D44E24A7}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager", "DeviceManager\DeviceManager.csproj", "{15F1A53F-27A0-44B2-BC6C-7B189AE84B7D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IomoteDMWebAPI", "IomoteDMWebAPI\IomoteDMWebAPI.csproj", "{AC0F696E-730C-476D-9CEC-428ADBCC7D82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech 01", "speech 01\speech 01.csproj", "{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +89,26 @@ Global
 		{AC0F696E-730C-476D-9CEC-428ADBCC7D82}.Release|x64.Build.0 = Release|Any CPU
 		{AC0F696E-730C-476D-9CEC-428ADBCC7D82}.Release|x86.ActiveCfg = Release|Any CPU
 		{AC0F696E-730C-476D-9CEC-428ADBCC7D82}.Release|x86.Build.0 = Release|Any CPU
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|ARM.ActiveCfg = Debug|ARM
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|ARM.Build.0 = Debug|ARM
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|ARM.Deploy.0 = Debug|ARM
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|x64.ActiveCfg = Debug|x64
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|x64.Build.0 = Debug|x64
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|x64.Deploy.0 = Debug|x64
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|x86.ActiveCfg = Debug|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|x86.Build.0 = Debug|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Debug|x86.Deploy.0 = Debug|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|Any CPU.ActiveCfg = Release|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|ARM.ActiveCfg = Release|ARM
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|ARM.Build.0 = Release|ARM
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|ARM.Deploy.0 = Release|ARM
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|x64.ActiveCfg = Release|x64
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|x64.Build.0 = Release|x64
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|x64.Deploy.0 = Release|x64
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|x86.ActiveCfg = Release|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|x86.Build.0 = Release|x86
+		{E2DE0E9C-A6CD-4AED-9671-B5817EDCBCB4}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
