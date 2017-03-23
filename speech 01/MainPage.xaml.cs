@@ -40,6 +40,7 @@ namespace speech_01
         private ResourceMap speechResourceMap;
         private byte reconState = 0;
         private bool started = false;
+        private MediaElement startSound;
 
         public MainPage()
         {
@@ -47,7 +48,131 @@ namespace speech_01
 
         }
 
-        
+
+        #region NATURAL LANGUAGE PROCESSING
+        private int evalString(LUISResponse response, string target, string[] mandEntTypes)
+        {
+            int totScore = 0;
+            Debug.WriteLine("[PARSE] - String: " + response.ToString());
+            //  Evaluating intents
+            foreach (lIntent value in response.intents)
+            {
+                Debug.WriteLine("[PARSE] - Intent: " + value.intent + " - Score: " + value.score.ToString());
+                if ((value.intent == "None") && (value.score > 0.09) )
+                    totScore--;
+                if ((value.intent == target) && (value.score > 0.95))
+                    totScore++;
+            }
+            //  Evaluating entities, there are mandatory entities to look for?
+            if (mandEntTypes != null)
+            {
+                int elemFound = 0, toFind = mandEntTypes.Length;
+                
+                foreach (lEntity value in response.entities)
+                {
+                    var valFound = 0;
+                    Debug.WriteLine("[PARSE] - Entity: " + value.entity + " - Type: " + value.type);
+                    foreach (string strVal in mandEntTypes)
+                    {
+                        if (value.type == strVal)
+                            valFound++;
+                        //  TODO: add confidence evaluation for any entity
+                    }
+                    if (valFound > 0)
+                        elemFound++;
+                }
+                if (elemFound != toFind)
+                    totScore = 0;
+                else
+                    totScore++;
+            }
+
+            return totScore;
+        }
+
+        private async Task LUISParse(string queryString)
+        {
+            int evalScore = 0 ;
+            await speechRecognizer.ContinuousRecognitionSession.StopAsync();
+            Debug.WriteLine("[LUIS] - Stop recognition");
+
+            using (var client = new HttpClient())
+            {
+                string uri =
+                  "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/66630de7-fd72-44ac-952b-32e6feff975d?subscription-key=6918315f720441f493181e4ca0730294&verbose=true&q=" + queryString;
+                HttpResponseMessage msg = await client.GetAsync(uri);
+                if (msg.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await msg.Content.ReadAsStringAsync();
+                    var luisData = JsonConvert.DeserializeObject<LUISResponse>(jsonResponse);
+                    
+
+                    string[] mTypes = { "Misura", "Ambiente" };
+
+
+                    evalScore = evalString(luisData, "LetturaSensore", mTypes);
+                }
+
+            }
+
+            //  TODO: implement azure iot hub commandds
+            if (evalScore > 1)
+            {
+                Debug.WriteLine("[IOTHUB] - Executing command! :-)");
+            }
+            else
+            {
+                Debug.WriteLine("[IOTHUB] - NOT Executing command, low score! :-(");
+            }
+        }
+        #endregion
+
+        #region UI MANAGEMENT & EVENTS
+
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            if (!started)
+            {
+                // Keep track of the UI thread dispatcher, as speech events will come in on a separate thread.
+                startSound = new MediaElement();
+                dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+                started = true;
+                speechContext = ResourceContext.GetForCurrentView();
+                speechResourceMap = ResourceManager.Current.MainResourceMap.GetSubtree("triggerStrings");
+
+                // Prompt the user for permission to access the microphone. This request will only happen
+                // once, it will not re-prompt if the user rejects the permission.
+                bool permissionGained = await AudioCapturePermissions.RequestMicrophonePermission();
+                if (permissionGained)
+                {
+                    btnStart.IsEnabled = true;
+
+                    PopulateLanguageDropdown();
+                    await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
+                    try
+                    {
+                        await speechRecognizer.ContinuousRecognitionSession.StartAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("[ERR] - On recognize starting...");
+
+                    }
+                }
+                else
+                {
+                    this.tbxScript.Text = "Permission to access capture resources was not given by the user, reset the application setting in Settings->Privacy->Microphone.";
+                    btnStart.IsEnabled = false;
+                    cbLanguage.IsEnabled = false;
+                }
+            }
+        }
+
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            //  TODO:inserire navigazione da e verso la pagina
+        }
         private void PopulateLanguageDropdown()
         {
             Language defaultLanguage = SpeechRecognizer.SystemSpeechLanguage;
@@ -67,44 +192,36 @@ namespace speech_01
             }
         }
 
-
-        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        private async void btnStart_Click(object sender, RoutedEventArgs e)
         {
-            if (!started)
+
+        }
+
+        public void playSoundSafe()
+        {
+            // If called from the UI thread, then update immediately.
+            // Otherwise, schedule a task on the UI thread to perform the update.
+            if (Dispatcher.HasThreadAccess)
             {
-                // Keep track of the UI thread dispatcher, as speech events will come in on a separate thread.
-                dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-                started = true;
-
-                speechResourceMap = ResourceManager.Current.MainResourceMap.GetSubtree("triggerStrings");
-                // Prompt the user for permission to access the microphone. This request will only happen
-                // once, it will not re-prompt if the user rejects the permission.
-                bool permissionGained = await AudioCapturePermissions.RequestMicrophonePermission();
-                if (permissionGained)
-                {
-                    btnStart.IsEnabled = true;
-
-                    PopulateLanguageDropdown();
-                    await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
-                    try
-                    {
-                        await speechRecognizer.ContinuousRecognitionSession.StartAsync();
-                        Debug.WriteLine("[NAV] - Task creato");
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("[ERR] - On recognize starting...");
-
-                    }
-                }
-                else
-                {
-                    this.tbxScript.Text = "Permission to access capture resources was not given by the user, reset the application setting in Settings->Privacy->Microphone.";
-                    btnStart.IsEnabled = false;
-                    cbLanguage.IsEnabled = false;
-                }
+                playSound();
+            }
+            else
+            {
+                var task = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => playSound());
             }
         }
+
+        public async void playSound()
+        {
+            Windows.Storage.StorageFolder folder = await Windows.ApplicationModel.Package.Current.InstalledLocation.GetFolderAsync("Assets");
+            Windows.Storage.StorageFile file = await folder.GetFileAsync("Windows Notify.wav");
+            var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.Read);
+            startSound.SetSource(stream, file.ContentType);
+            startSound.Play();
+        }
+        #endregion
+
+        #region SPEECH RECOGNIZER MANAGEMENT & EVENTS
 
         private async Task InitializeRecognizer(Language recognizerLanguage, byte initType)
         {
@@ -123,15 +240,12 @@ namespace speech_01
 
             this.speechRecognizer = new SpeechRecognizer(recognizerLanguage);
 
-            switch(initType)
+            switch (initType)
             {
                 case 0:
-
-                    btnStart.IsEnabled = true;
-
                     // Initialize resource map to retrieve localized speech strings.
                     string langTag = recognizerLanguage.LanguageTag;
-                    speechContext = ResourceContext.GetForCurrentView();
+
                     speechContext.Languages = new string[] { langTag };
 
                     speechResourceMap = ResourceManager.Current.MainResourceMap.GetSubtree("triggerStrings");
@@ -152,7 +266,7 @@ namespace speech_01
                                 {
                         speechResourceMap.GetValue("startCmd", speechContext).ValueAsString
                                 }, "Home"));
-                        
+
                         SpeechRecognitionCompilationResult res = await speechRecognizer.CompileConstraintsAsync();
                         if (res.Status != SpeechRecognitionResultStatus.Success)
                         {
@@ -169,20 +283,6 @@ namespace speech_01
                     }
                     catch (Exception ex)
                     {
-                        /*
-                        if ((uint)ex.HResult == HResultRecognizerNotFound)
-                        {
-                            btnContinuousRecognize.IsEnabled = false;
-
-                            resultTextBlock.Visibility = Visibility.Visible;
-                            resultTextBlock.Text = "Speech Language pack for selected language not installed.";
-                        }
-                        else
-                        {
-                            var messageDialog = new Windows.UI.Popups.MessageDialog(ex.Message, "Exception");
-                            await messageDialog.ShowAsync();
-                        }
-                        */
                         Debug.WriteLine("[INIT] - Errore nella try-catch della list");
 
                     }
@@ -199,7 +299,7 @@ namespace speech_01
                     SpeechRecognitionCompilationResult result = await speechRecognizer.CompileConstraintsAsync();
                     if (result.Status != SpeechRecognitionResultStatus.Success)
                     {
-                        btnStart.IsEnabled = false;
+
                         Debug.WriteLine("[INIT] - Grammar compilation FAILED");
                     }
                     else
@@ -213,41 +313,10 @@ namespace speech_01
                     speechRecognizer.HypothesisGenerated += SpeechRecognizer_HypothesisGenerated;
                     break;
             }
-            
-        }
-
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            //  TODO:inserire navigazione da e verso la pagina
-        }
-
-        private async void btnStart_Click(object sender, RoutedEventArgs e)
-        {
-            await LUISParse("ciao");
 
         }
 
-        private async Task LUISParse(string queryString)
-        {
-            using (var client = new HttpClient())
-            {
-                string uri =
-                  "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/66630de7-fd72-44ac-952b-32e6feff975d?subscription-key=6918315f720441f493181e4ca0730294&verbose=true&q=\"qual è la temperatura in cucina";// + queryString;
-                HttpResponseMessage msg = await client.GetAsync(uri);
-                if (msg.IsSuccessStatusCode)
-                {
-                    
-                    var jsonResponse = await msg.Content.ReadAsStringAsync();
-                    var _Data = JsonConvert.DeserializeObject<LUISResponse>(jsonResponse);
-                    var entityFound = _Data.entities[0].entity;
-                    var topIntent = _Data.intents[0].intent;
-                    
-                }
-            }
-        }
 
-        #region RECOGNIZER EVENTS
         private void SpeechRecognizer_StateChanged(SpeechRecognizer sender, SpeechRecognizerStateChangedEventArgs args)
         {
             Debug.WriteLine("[STATE CHG] - " + args.State.ToString());
@@ -261,9 +330,24 @@ namespace speech_01
 
         }
 
-        private void ContinuousRecognitionSession_Completed(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionCompletedEventArgs args)
+        private async void ContinuousRecognitionSession_Completed(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionCompletedEventArgs args)
         {
             Debug.WriteLine("[COMPLETED] - " + args.Status.ToString());
+            if(args.Status.ToString() == "TimeoutExceeded")
+            {
+                reconState = 0;
+                await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
+
+                try
+                {
+                    await speechRecognizer.ContinuousRecognitionSession.StartAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("[ERR] - On recognize starting...");
+
+                }
+            }
         }
 
         private async void ContinuousRecognitionSession_ResultGenerated(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionResultGeneratedEventArgs args)
@@ -275,6 +359,8 @@ namespace speech_01
                 {
                     reconState = 1;
                     await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
+
+                    playSoundSafe();
                     try
                     {
                         await speechRecognizer.ContinuousRecognitionSession.StartAsync();
@@ -285,11 +371,25 @@ namespace speech_01
 
                     }
 
-                    Debug.WriteLine("[RES] - Cambio modalità: dettato");
+                    Debug.WriteLine("[RES] - Changing mode: dictate");
                 }
                 else if (reconState == 1)
                 {
-                    //TODO: inserire chiamata verso lui e ritorno a stato list
+                    await LUISParse(args.Result.Text);
+                    //  Now all the required tasks have been accomplished, we must restart the speech
+                    //  recognition engine waiting for a new command
+                    reconState = 0;
+                    await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
+                    
+                    try
+                    {
+                        await speechRecognizer.ContinuousRecognitionSession.StartAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("[ERR] - On recognize starting...");
+
+                    }
                 }
             }
         }
