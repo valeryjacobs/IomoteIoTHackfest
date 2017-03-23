@@ -40,6 +40,7 @@
 
     <h1 data-bind="with: selectedDevice">Selected device:&nbsp;<span data-bind="text:deviceId"></span></h1>
 
+    <button class="btn" data-bind="click: $parent.invokeMethod">Invoke firmware update</button>
     <div class="datagrid">
         <table>
             <thead>
@@ -59,15 +60,51 @@
         </table>
     </div>
 
+    <hr />
+
+
+    <h1 data-bind="with: selectedDevice">Desired properties:&nbsp;<span data-bind="id:deviceId"></span></h1>
+
+
     <div class="datagrid">
         <table>
-            <tbody data-bind="foreach: desiredProperties">
+            <tbody data-bind="with: twinDesiredObj">
                 <tr>
-                    <td data-bind="text: $data"></td>
+                    <td>send_time</td>
+                    <td><input data-bind="textInput: send_time" /></td>
+                </tr>
+                <tr>
+                    <td>log_time</td>
+                    <td><input data-bind="textInput: log_time" /></td>
+                </tr>
+                <tr>
+                    <td>power_mode</td>
+                    <td><input data-bind="textInput: power_mode" /></td>
+                </tr>
+                <tr>
+                    <td>digital_in_mode</td>
+                    <td><input data-bind="textInput: digital_in_mode" /></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button class="btn" data-bind="click: $parent.updateDevice">Update</button>
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
+
+
+    <!--<div class="datagrid">
+        <table>
+            <tbody data-bind="foreach: desiredProperties">
+                <tr>
+                    <td data-bind="text: $data"></td>
+                    <td><input data-bind="textInput: $parent.twinPropertyValue" /></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>-->
 
     <script>
 
@@ -79,25 +116,62 @@
             self.view = ko.observable("main");
             self.selectedDeviceId = ko.observable("Device00000008");
             self.twinDesired = ko.observable();
+            self.twinDesiredObj = ko.observable();
             self.desiredProperties = ko.observable();
             self.twinReported = ko.observable();
+            self.twinPropertyValue = ko.computed(function (name) {
+                if (name != undefined) {
+                    return self.twinDesired[name]();
+                }
+                else {
+                    return 'not found';
+                }
+            }, this);
+
             self.selectDevice = function (device) {
                 self.selectedDevice(device);
 
                 $.getJSON("/api/devices/" + self.selectedDevice().deviceId, function (data) {
                     self.selectedDeviceTwin(data);
+
+                    //Need this for new non-initialized device only. This prevents the use of custom bindings.
+                    if (data.properties.desired.send_time == undefined)
+                        data.properties.desired.send_time = '';
+                    if (data.properties.desired.log_time == undefined)
+                        data.properties.desired.log_time = '';
+                    if (data.properties.desired.power_mode == undefined)
+                        data.properties.desired.power_mode = '';
+                    if (data.properties.desired.digital_in_mode == undefined)
+                        data.properties.desired.digital_in_mode = '';
+
                     self.twinDesired(ko.toJSON(data.properties.desired));
+                    self.twinDesiredObj(data.properties.desired);
                     self.twinReported(ko.toJSON(data.properties.reported));
 
                     var reflector = new Reflector(data.properties.desired);
                     self.desiredProperties(reflector.getProperties());
                 })
-
-
-
-
-
             }
+
+            self.updateDevice = function () {
+
+                var desired = self.twinDesiredObj();
+                var patch = {
+                    "send_time":  desired.send_time ,
+                    "log_time": desired.log_time ,
+                    "power_mode": desired.power_mode ,
+                    "digital_in_mode": desired.digital_in_mode
+                }
+
+                $.ajax({
+                    type: "PUT",
+                    url: '/api/devices/' + self.selectedDevice().deviceId,
+                    dataType: 'application/json',
+                    data: patch
+                });
+            }
+
+          
 
             var Reflector = function (obj) {
                 this.getProperties = function () {

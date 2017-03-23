@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Devices;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace DeviceManager
     class Program
     {
         static RegistryManager registryManager;
-        static string connString = "HostName=vjiomote.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=4tFS5o6pC6ff0bol57YOU WHISHo/kticwRh+M=";
+        static string connString = ConfigurationManager.ConnectionStrings["IoTHub_Conn"].ToString();
 
         static void Main(string[] args)
         {

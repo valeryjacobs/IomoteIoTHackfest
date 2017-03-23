@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Devices;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -11,7 +12,7 @@ namespace IomoteDMWebAPI.Controllers
     public class DMController : ApiController
     {
         static RegistryManager registryManager;
-        static string connString = "HostName=vjiomote.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=4tFS5o6pC6YOU WHISH Hu5o/kticwRh+M=";
+        static string connString = ConfigurationManager.ConnectionStrings["IoTHub_Conn"].ToString();
         static ServiceClient client;
         static JobClient jobClient;
         // GET: api/DM

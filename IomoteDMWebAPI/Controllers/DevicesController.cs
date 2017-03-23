@@ -2,6 +2,7 @@
 using Microsoft.Azure.Devices.Shared;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -13,7 +14,7 @@ namespace IomoteDMWebAPI.Controllers
     public class DevicesController : ApiController
     {
         static RegistryManager registryManager;
-        static string connString = "HostName=iomoteHub01.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=ngON3nUi7bSYvkYOU WHISHDlOVm2GiQ589FN8EpA=";// "HostName=vjiomote.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=4tFS5o6pC6fYOU WHISHHu5o/kticwRh+M=";
+        static string connString = ConfigurationManager.ConnectionStrings["IoTHub_Conn"].ToString();
         static ServiceClient client;
         static JobClient jobClient;
 
@@ -35,9 +36,17 @@ namespace IomoteDMWebAPI.Controllers
         }
 
         // PUT: api/Devices/5
-        public void Put(int id, [FromBody]string value)
+        public async Task Put(string id, [FromBody]DesiredProperties patch)
         {
+            var input = Newtonsoft.Json.JsonConvert.SerializeObject(patch).Replace("\"", "'");
+            var p = @"{'properties': {'desired': " + input + "}"; //{ "send_time":"10","log_time":"5","power_mode":"0","digital_in_mode":"0"}
+            var twin = await registryManager.GetTwinAsync(id);
+            await registryManager.UpdateTwinAsync(twin.DeviceId, p , twin.ETag);
         }
+
+
+
+
 
         // DELETE: api/Devices/5
         public void Delete(int id)
@@ -62,5 +71,14 @@ namespace IomoteDMWebAPI.Controllers
 
             return devicesDictionary;
         }
+    }
+
+    public class DesiredProperties
+    {
+        public int send_time { get; set; }
+        public int log_time { get; set; }
+        public int power_mode { get; set; }
+
+        public int digital_in_mode { get; set; }
     }
 }
