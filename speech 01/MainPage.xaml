@@ -15,14 +15,14 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="60"></RowDefinition>
             <RowDefinition Height="60"></RowDefinition>
+            <RowDefinition Height="60"></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
 
         <ComboBox Margin="5" Grid.Column="0" x:Name="cbLanguage" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="206"/>
         <ComboBox Margin="5"  Grid.Column="1" x:Name="cbVoices" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="206"/>
-
         <Button Margin="5" Grid.Row="1" x:Name="btnStart" Content="Button" HorizontalAlignment="Left" VerticalAlignment="Top" Click="btnStart_Click"/>
-
-        <TextBox Margin="5" Grid.Row="2" Grid.ColumnSpan="2" x:Name="tbxScript"   HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="TextBox"  />
+        <TextBlock Margin="8" Grid.Row="2" Grid.ColumnSpan="2" x:Name="status" FontSize="30" Foreground="Red"></TextBlock>
+        <TextBox Margin="5" Grid.Row="3" Grid.ColumnSpan="2" x:Name="tbxScript"   HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="TextBox"  />
     </Grid>
 </Page>

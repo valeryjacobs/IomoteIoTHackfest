@@ -11,9 +11,9 @@ namespace DeviceSimulator
     class Program
     {
         static DeviceClient deviceClient;
-        static string iotHubUri = "vjiomote.azure-devices.net";
-        static string deviceKey = "/etc4JZ7FBgP0DgJrB4tNmql9JLQap1mo2TmtHZEe2U=";
-        static string deviceId = "Device00000001";
+        static string iotHubUri = "iomoteHub01.azure-devices.net";
+        static string deviceKey = "rReAqYjrLxC2BDXT2ZY32DBxmvKfxBoVYB8Ja6I6dKM=";
+        static string deviceId = "VJHackfestDemo";
 
         static void Main(string[] args)
         {
@@ -36,7 +36,7 @@ namespace DeviceSimulator
 
                 var telemetryDataPoint = new
                 {
-                    deviceId = "SimulatedDevice",
+                    room = "Kitchen",
                     currentTemp = currentTemp
                 };
 

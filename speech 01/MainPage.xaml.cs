@@ -44,6 +44,8 @@ namespace speech_01
         private MediaElement startSound, voice;
         private SpeechSynthesizer synthesizer;
 
+        private string speech;
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -147,6 +149,10 @@ namespace speech_01
             if (evalScore > 1)
             {
                 Debug.WriteLine("[IOTHUB] - Executing command! :-)");
+
+                var response = await HTTPHelper.Send(HttpMethod.Get, "http://localhost:4530/api/orchestrator/LetturaSensore");
+
+                speakSafe("Here's what I got. " + response);
                 speakSafe("Ho eseguito il comando");
             }
             else
@@ -263,7 +269,9 @@ namespace speech_01
 
         private async void AppendOutput(string input)
         {
-            tbxScript.Text = input  + "\n" + tbxScript.Text;
+            tbxScript.Text = input + "\n" + tbxScript.Text;
+
+            status.Text = input;
         }
 
         public void speakSafe(string textToSay)
@@ -400,12 +408,13 @@ namespace speech_01
         private void SpeechRecognizer_StateChanged(SpeechRecognizer sender, SpeechRecognizerStateChangedEventArgs args)
         {
             Debug.WriteLine("[STATE CHG] - " + args.State.ToString());
-          
+
         }
 
         private void SpeechRecognizer_HypothesisGenerated(SpeechRecognizer sender, SpeechRecognitionHypothesisGeneratedEventArgs args)
         {
             string hypothesis = args.Hypothesis.Text;
+            speech = hypothesis;
 
             Debug.WriteLine("[HYP] - " + hypothesis);
             AppendOutputSafe(hypothesis);
@@ -415,6 +424,8 @@ namespace speech_01
         private async void ContinuousRecognitionSession_Completed(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionCompletedEventArgs args)
         {
             Debug.WriteLine("[COMPLETED] - " + args.Status.ToString());
+
+
             if (args.Status.ToString() == "TimeoutExceeded")
             {
                 reconState = 0;
@@ -444,7 +455,7 @@ namespace speech_01
                     await InitializeRecognizer(SpeechRecognizer.SystemSpeechLanguage, reconState);
 
                     playSoundSafe();
-                    
+
                     try
                     {
                         await speechRecognizer.ContinuousRecognitionSession.StartAsync();

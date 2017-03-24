@@ -44,10 +44,6 @@ namespace IomoteDMWebAPI.Controllers
             await registryManager.UpdateTwinAsync(twin.DeviceId, p , twin.ETag);
         }
 
-
-
-
-
         // DELETE: api/Devices/5
         public void Delete(int id)
         {
